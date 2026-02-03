@@ -82,7 +82,7 @@ export 'src/flutter/transitions.dart'
 
 // Flutter integration - Image loading widgets
 export 'src/flutter/thumbhash_image_widget.dart'
-    show ThumbHashPlaceholder;
+    show ThumbHashPlaceholder, ImageErrorWidgetBuilder;
 
 export 'src/flutter/thumbhash_image_builder.dart'
     show ThumbHashImageBuilder, ThumbHashLoadingState, ThumbHashWidgetBuilder;

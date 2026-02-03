@@ -5,6 +5,19 @@ import 'package:flutter/widgets.dart';
 import 'thumbhash_image.dart';
 import 'transitions.dart';
 
+/// Signature for a function that builds a widget when an image fails to load.
+///
+/// Used by [ThumbHashPlaceholder.errorBuilder] to allow custom error handling.
+///
+/// The [context] is the build context where the error widget will be displayed.
+/// The [error] is the exception that caused the image to fail loading.
+/// The [stackTrace] is the stack trace associated with the error, if available.
+typedef ImageErrorWidgetBuilder = Widget Function(
+  BuildContext context,
+  Object error,
+  StackTrace? stackTrace,
+);
+
 /// A widget that displays a ThumbHash placeholder and transitions to
 /// the loaded image with a natural animation effect.
 ///
@@ -46,10 +59,32 @@ class ThumbHashPlaceholder extends StatefulWidget {
   /// Defaults to a 300ms fade transition.
   final TransitionConfig transition;
 
-  /// Widget to show when image loading fails.
+  /// Builder for the widget to show when image loading fails.
+  ///
+  /// Provides access to the [BuildContext], the [error] that occurred,
+  /// and the [stackTrace] for custom error handling and display.
   ///
   /// If null, the ThumbHash placeholder remains visible on error.
-  final Widget? errorWidget;
+  ///
+  /// Example:
+  /// ```dart
+  /// ThumbHashPlaceholder(
+  ///   thumbHash: hash,
+  ///   image: NetworkImage(url),
+  ///   errorBuilder: (context, error, stackTrace) {
+  ///     return Center(
+  ///       child: Column(
+  ///         mainAxisSize: MainAxisSize.min,
+  ///         children: [
+  ///           Icon(Icons.error, color: Colors.red),
+  ///           Text('Failed to load image'),
+  ///         ],
+  ///       ),
+  ///     );
+  ///   },
+  /// )
+  /// ```
+  final ImageErrorWidgetBuilder? errorBuilder;
 
   /// Optional widget to overlay while loading.
   ///
@@ -74,7 +109,7 @@ class ThumbHashPlaceholder extends StatefulWidget {
     required this.image,
     this.fit = BoxFit.cover,
     this.transition = const TransitionConfig(),
-    this.errorWidget,
+    this.errorBuilder,
     this.loadingWidget,
     this.alignment = Alignment.center,
     this.repeat = ImageRepeat.noRepeat,
@@ -95,6 +130,8 @@ class _ThumbHashPlaceholderState extends State<ThumbHashPlaceholder>
   ImageInfo? _imageInfo;
   bool _isLoaded = false;
   bool _hasError = false;
+  Object? _error;
+  StackTrace? _stackTrace;
 
   @override
   void initState() {
@@ -122,6 +159,8 @@ class _ThumbHashPlaceholderState extends State<ThumbHashPlaceholder>
       _disposeImageStream();
       _isLoaded = false;
       _hasError = false;
+      _error = null;
+      _stackTrace = null;
       _imageInfo = null;
       _controller.reset();
       _resolveImage();
@@ -173,6 +212,8 @@ class _ThumbHashPlaceholderState extends State<ThumbHashPlaceholder>
     if (!mounted) return;
     setState(() {
       _hasError = true;
+      _error = error;
+      _stackTrace = stackTrace;
     });
   }
 
@@ -204,7 +245,8 @@ class _ThumbHashPlaceholderState extends State<ThumbHashPlaceholder>
 
     // If error occurred, show error widget or placeholder
     if (_hasError) {
-      return widget.errorWidget ?? placeholder;
+      return widget.errorBuilder?.call(context, _error!, _stackTrace) ??
+          placeholder;
     }
 
     // Build based on transition type
