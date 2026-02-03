@@ -3,7 +3,7 @@ description: >-
   Ultra-fast ThumbHash encoder/decoder for Dart and Flutter. 
   A very compact representation of image placeholders with alpha support 
   and natural loading transitions.
-version: 1.1.0
+version: 1.1.1
 repository: https://github.com/KhaledSMQ/fast_thumbhash
 homepage: https://khaled.ee
 issue_tracker: https://github.com/KhaledSMQ/fast_thumbhash/issues

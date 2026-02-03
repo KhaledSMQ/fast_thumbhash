@@ -234,13 +234,17 @@ class _ThumbHashPlaceholderState extends State<ThumbHashPlaceholder>
 
   @override
   Widget build(BuildContext context) {
-    // Build the placeholder image
+    // Build the placeholder image with error handling
     final placeholder = Image(
       image: widget.thumbHash.toImage(),
       fit: widget.fit,
       alignment: widget.alignment,
       repeat: widget.repeat,
       filterQuality: widget.filterQuality,
+      errorBuilder: (context, error, stackTrace) {
+        // If the thumbhash placeholder fails to decode, show empty widget
+        return const SizedBox.shrink();
+      },
     );
 
     // If error occurred, show error widget or placeholder

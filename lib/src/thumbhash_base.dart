@@ -70,6 +70,22 @@ ThumbHashImage thumbHashToRGBA(Uint8List hash) {
   final lxFinal = lx < 3 ? 3 : lx;
   final lyFinal = ly < 3 ? 3 : ly;
 
+  // Calculate required bytes based on header configuration
+  final acStart = hasAlpha ? 6 : 5;
+  final lAcCount = _countAc(lxFinal, lyFinal);
+  // P and Q are always 3x3 = 5 coefficients each
+  // A (if hasAlpha) is 5x5 = 14 coefficients
+  final totalAcCount = lAcCount + 5 + 5 + (hasAlpha ? 14 : 0);
+  final requiredBytes = acStart + ((totalAcCount + 1) >> 1);
+
+  if (hash.length < requiredBytes) {
+    throw ArgumentError(
+      'ThumbHash is too short: got ${hash.length} bytes, but header indicates '
+      '$requiredBytes bytes required (hasAlpha=$hasAlpha, lx=$lx, ly=$ly). '
+      'The hash may be truncated or corrupted.',
+    );
+  }
+
   final aDc = hasAlpha ? (hash[5] & 15) * inv15 : 1.0;
   final aScale = hasAlpha ? ((hash[5] >> 4) & 15) * inv15 : 0.0;
 
@@ -79,11 +95,9 @@ ThumbHashImage thumbHashToRGBA(Uint8List hash) {
   final h = ratio > 1.0 ? (32.0 / ratio).round() : 32;
 
   // Decode AC coefficients inline - no intermediate objects
-  final acStart = hasAlpha ? 6 : 5;
   var acIndex = 0;
 
   // L channel AC
-  final lAcCount = _countAc(lxFinal, lyFinal);
   final lAc = Float64List(lAcCount);
   for (var i = 0; i < lAcCount; i++) {
     final data = hash[acStart + (acIndex >> 1)] >> ((acIndex & 1) << 2);
