@@ -23,7 +23,7 @@ Add to your `pubspec.yaml`:
 
 ```yaml
 dependencies:
-  fast_thumbhash: ^1.0.0
+  fast_thumbhash: ^1.1.0
 ```
 
 ## Quick Start
@@ -90,6 +90,23 @@ ThumbHashPlaceholder(
     duration: Duration(milliseconds: 500),
     curve: Curves.easeInOut,
   ),
+)
+
+// With error handling
+ThumbHashPlaceholder(
+  thumbHash: thumbHash,
+  image: NetworkImage(url),
+  errorBuilder: (context, error, stackTrace) {
+    return Center(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(Icons.error, color: Colors.red),
+          Text('Failed to load image'),
+        ],
+      ),
+    );
+  },
 )
 ```
 
