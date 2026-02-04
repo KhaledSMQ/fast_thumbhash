@@ -74,6 +74,28 @@ class ThumbHash {
     return ThumbHash.fromBytes(base64.decode(base64.normalize(encoded)));
   }
 
+  /// Creates a ThumbHash from a base64-encoded string asynchronously.
+  ///
+  /// This method decodes the base64 string and pre-decodes the RGBA data
+  /// in a separate isolate, so the ThumbHash is ready to use immediately
+  /// without blocking the main thread.
+  ///
+  /// [encoded] is the base64 string (standard or URL-safe encoding).
+  ///
+  /// Example:
+  /// ```dart
+  /// final hash = await ThumbHash.fromBase64Async('3OcRJYB4d3h/iIeHeEh3eIhw+j3A');
+  /// // RGBA is already decoded, toImage() is instant
+  /// Image(image: hash.toImage())
+  /// ```
+  static Future<ThumbHash> fromBase64Async(String encoded) async {
+    final bytes = base64.decode(base64.normalize(encoded));
+    final hash = ThumbHash.fromBytes(bytes);
+    // Pre-decode RGBA in isolate so it's cached and ready
+    await hash.toRGBAAsync();
+    return hash;
+  }
+
   /// Gets the raw ThumbHash bytes.
   ///
   /// This can be useful for serialization or comparison.

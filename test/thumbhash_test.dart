@@ -476,5 +476,22 @@ void main() {
       expect(results[1].rgba, equals(sync2.rgba));
       expect(results[2].rgba, equals(sync1.rgba));
     });
+
+    test('ThumbHash.fromBase64Async creates valid instance with pre-decoded RGBA', () async {
+      const base64Hash = '3OcRJYB4d3h/iIeHeEh3eIhw+j3A';
+
+      final hash = await ThumbHash.fromBase64Async(base64Hash);
+
+      // Verify it's equivalent to sync version
+      final syncHash = ThumbHash.fromBase64(base64Hash);
+      expect(hash.bytes, equals(syncHash.bytes));
+      expect(hash.toAspectRatio(), equals(syncHash.toAspectRatio()));
+      expect(hash.hasAlpha, equals(syncHash.hasAlpha));
+
+      // RGBA should already be cached (pre-decoded)
+      final rgba1 = hash.toRGBA();
+      final rgba2 = hash.toRGBA();
+      expect(identical(rgba1, rgba2), isTrue);
+    });
   });
 }

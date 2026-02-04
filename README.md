@@ -62,6 +62,9 @@ AspectRatio(
 For better UI performance, use async methods to run decoding off the main thread:
 
 ```dart
+// Create with pre-decoded RGBA - ready to use instantly
+final thumbHash = await ThumbHash.fromBase64Async('3OcRJYB4d3h/iIeHeEh3eIhw+j3A');
+
 // Async methods run in separate isolates - no UI jank!
 final imageProvider = await thumbHash.toImageAsync();
 final pngBytes = await thumbHash.toPngBytesAsync();
@@ -181,6 +184,9 @@ The main class for Flutter applications:
 ThumbHash.fromBase64(String encoded);
 ThumbHash.fromBytes(Uint8List bytes);
 ThumbHash.fromIntList(List<int> list);
+
+// Async constructor (pre-decodes RGBA in isolate)
+static Future<ThumbHash> fromBase64Async(String encoded);
 
 // Sync methods
 ImageProvider toImage();         // For Flutter Image widget
