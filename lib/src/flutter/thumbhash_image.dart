@@ -124,6 +124,67 @@ class ThumbHash {
     return _cachedPng ??= thumbHashImageToPng(toRGBA());
   }
 
+  // ==========================================================================
+  // ASYNC METHODS
+  // ==========================================================================
+
+  /// Decodes the ThumbHash to RGBA pixel data asynchronously.
+  ///
+  /// This runs the decoding in a separate isolate to avoid blocking
+  /// the main thread, which is useful for UI applications.
+  ///
+  /// Returns a [Future] that completes with a [ThumbHashImage] containing
+  /// width, height, and RGBA pixel data.
+  /// The result is cached for subsequent calls (both sync and async).
+  ///
+  /// Example:
+  /// ```dart
+  /// final image = await hash.toRGBAAsync();
+  /// print('Decoded size: ${image.width}x${image.height}');
+  /// ```
+  Future<ThumbHashImage> toRGBAAsync() async {
+    if (_cachedImage != null) return _cachedImage!;
+    _cachedImage = await thumbHashToRGBAAsync(_data);
+    return _cachedImage!;
+  }
+
+  /// Gets the PNG bytes for the decoded ThumbHash image asynchronously.
+  ///
+  /// This runs both the decoding and PNG encoding in separate isolates
+  /// to avoid blocking the main thread.
+  ///
+  /// The result is cached for subsequent calls (both sync and async).
+  ///
+  /// Example:
+  /// ```dart
+  /// final pngBytes = await hash.toPngBytesAsync();
+  /// await File('placeholder.png').writeAsBytes(pngBytes);
+  /// ```
+  Future<Uint8List> toPngBytesAsync() async {
+    if (_cachedPng != null) return _cachedPng!;
+    final image = await toRGBAAsync();
+    _cachedPng = await thumbHashImageToPngAsync(image);
+    return _cachedPng!;
+  }
+
+  /// Creates an [ImageProvider] for use with Flutter's [Image] widget asynchronously.
+  ///
+  /// This runs the decoding and PNG encoding in separate isolates
+  /// to avoid blocking the main thread.
+  ///
+  /// Example:
+  /// ```dart
+  /// final imageProvider = await hash.toImageAsync();
+  /// Image(
+  ///   image: imageProvider,
+  ///   fit: BoxFit.cover,
+  /// )
+  /// ```
+  Future<ImageProvider> toImageAsync() async {
+    final png = await toPngBytesAsync();
+    return MemoryImage(png);
+  }
+
   /// Gets the average color of the image as a Flutter [Color].
   ///
   /// This is useful for setting a background color while the actual

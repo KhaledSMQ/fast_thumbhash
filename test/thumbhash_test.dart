@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:fast_thumbhash/fast_thumbhash.dart';
+import 'package:flutter/painting.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
@@ -350,6 +351,130 @@ void main() {
       );
       final str = image.toString();
       expect(str, contains('32x24'));
+    });
+  });
+
+  group('Async Functions', () {
+    test('thumbHashToRGBAAsync produces same result as sync', () async {
+      const base64Hash = '3OcRJYB4d3h/iIeHeEh3eIhw+j3A';
+      final hash = Uint8List.fromList(base64.decode(base64Hash));
+
+      final syncResult = thumbHashToRGBA(hash);
+      final asyncResult = await thumbHashToRGBAAsync(hash);
+
+      expect(asyncResult.width, equals(syncResult.width));
+      expect(asyncResult.height, equals(syncResult.height));
+      expect(asyncResult.rgba, equals(syncResult.rgba));
+    });
+
+    test('rgbaToThumbHashAsync produces same result as sync', () async {
+      const w = 8, h = 8;
+      final rgba = Uint8List(w * h * 4);
+      for (var i = 0; i < w * h; i++) {
+        rgba[i * 4] = 128; // R
+        rgba[i * 4 + 1] = 64; // G
+        rgba[i * 4 + 2] = 192; // B
+        rgba[i * 4 + 3] = 255; // A
+      }
+
+      final syncResult = rgbaToThumbHash(w, h, rgba);
+      final asyncResult = await rgbaToThumbHashAsync(w, h, rgba);
+
+      expect(asyncResult, equals(syncResult));
+    });
+
+    test('thumbHashImageToPngAsync produces same result as sync', () async {
+      const base64Hash = '3OcRJYB4d3h/iIeHeEh3eIhw+j3A';
+      final hash = Uint8List.fromList(base64.decode(base64Hash));
+      final image = thumbHashToRGBA(hash);
+
+      final syncResult = thumbHashImageToPng(image);
+      final asyncResult = await thumbHashImageToPngAsync(image);
+
+      expect(asyncResult, equals(syncResult));
+    });
+
+    test('ThumbHash.toRGBAAsync produces same result as sync', () async {
+      final hash = ThumbHash.fromBase64('3OcRJYB4d3h/iIeHeEh3eIhw+j3A');
+
+      final syncResult = hash.toRGBA();
+      final asyncResult = await hash.toRGBAAsync();
+
+      expect(asyncResult.width, equals(syncResult.width));
+      expect(asyncResult.height, equals(syncResult.height));
+      expect(asyncResult.rgba, equals(syncResult.rgba));
+    });
+
+    test('ThumbHash.toRGBAAsync caches result', () async {
+      final hash = ThumbHash.fromBase64('3OcRJYB4d3h/iIeHeEh3eIhw+j3A');
+
+      final result1 = await hash.toRGBAAsync();
+      final result2 = await hash.toRGBAAsync();
+
+      expect(identical(result1, result2), isTrue);
+    });
+
+    test('ThumbHash.toPngBytesAsync produces same result as sync', () async {
+      final hash = ThumbHash.fromBase64('3OcRJYB4d3h/iIeHeEh3eIhw+j3A');
+
+      // Use a fresh instance for sync to avoid cache interference
+      final hashSync = ThumbHash.fromBase64('3OcRJYB4d3h/iIeHeEh3eIhw+j3A');
+      final syncResult = hashSync.toPngBytes();
+      final asyncResult = await hash.toPngBytesAsync();
+
+      expect(asyncResult, equals(syncResult));
+    });
+
+    test('ThumbHash.toPngBytesAsync caches result', () async {
+      final hash = ThumbHash.fromBase64('3OcRJYB4d3h/iIeHeEh3eIhw+j3A');
+
+      final result1 = await hash.toPngBytesAsync();
+      final result2 = await hash.toPngBytesAsync();
+
+      expect(identical(result1, result2), isTrue);
+    });
+
+    test('ThumbHash.toImageAsync returns MemoryImage', () async {
+      final hash = ThumbHash.fromBase64('3OcRJYB4d3h/iIeHeEh3eIhw+j3A');
+
+      final imageProvider = await hash.toImageAsync();
+
+      expect(imageProvider, isA<MemoryImage>());
+    });
+
+    test('async methods work with alpha channel', () async {
+      const base64Hash = '3OiFBQAziIWCjHn3aGpwZ/moB8iHeHR6Zw==';
+      final hash = Uint8List.fromList(base64.decode(base64Hash));
+
+      final syncResult = thumbHashToRGBA(hash);
+      final asyncResult = await thumbHashToRGBAAsync(hash);
+
+      expect(asyncResult.width, equals(syncResult.width));
+      expect(asyncResult.height, equals(syncResult.height));
+      expect(asyncResult.rgba, equals(syncResult.rgba));
+    });
+
+    test('multiple concurrent async calls work correctly', () async {
+      const base64Hash1 = '3OcRJYB4d3h/iIeHeEh3eIhw+j3A';
+      const base64Hash2 = '3OiFBQAziIWCjHn3aGpwZ/moB8iHeHR6Zw==';
+
+      final hash1 = Uint8List.fromList(base64.decode(base64Hash1));
+      final hash2 = Uint8List.fromList(base64.decode(base64Hash2));
+
+      // Run multiple async operations concurrently
+      final results = await Future.wait([
+        thumbHashToRGBAAsync(hash1),
+        thumbHashToRGBAAsync(hash2),
+        thumbHashToRGBAAsync(hash1),
+      ]);
+
+      // Verify results match sync versions
+      final sync1 = thumbHashToRGBA(hash1);
+      final sync2 = thumbHashToRGBA(hash2);
+
+      expect(results[0].rgba, equals(sync1.rgba));
+      expect(results[1].rgba, equals(sync2.rgba));
+      expect(results[2].rgba, equals(sync1.rgba));
     });
   });
 }

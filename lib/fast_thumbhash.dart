@@ -63,7 +63,9 @@ library fast_thumbhash;
 export 'src/thumbhash_base.dart'
     show
         thumbHashToRGBA,
+        thumbHashToRGBAAsync,
         rgbaToThumbHash,
+        rgbaToThumbHashAsync,
         thumbHashToAverageRGBA,
         thumbHashToApproximateAspectRatio;
 
@@ -71,7 +73,7 @@ export 'src/thumbhash_base.dart'
 export 'src/models.dart' show ThumbHashImage, ThumbHashColor;
 
 // PNG encoder
-export 'src/png_encoder.dart' show thumbHashImageToPng;
+export 'src/png_encoder.dart' show thumbHashImageToPng, thumbHashImageToPngAsync;
 
 // Flutter integration - ThumbHash class
 export 'src/flutter/thumbhash_image.dart' show ThumbHash;

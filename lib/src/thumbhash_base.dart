@@ -1,3 +1,4 @@
+import 'dart:isolate';
 import 'dart:math' as math;
 import 'dart:typed_data';
 
@@ -473,6 +474,61 @@ Uint8List rgbaToThumbHash(int w, int h, Uint8List rgba) {
   }
 
   return hash;
+}
+
+// ============================================================================
+// ASYNC FUNCTIONS
+// ============================================================================
+
+/// Decodes a ThumbHash to an RGBA image asynchronously.
+///
+/// This runs [thumbHashToRGBA] in a separate isolate to avoid blocking
+/// the main thread, which is useful for UI applications.
+///
+/// RGB is not premultiplied by A (straight alpha).
+///
+/// [hash] is the ThumbHash bytes (typically from base64 decoding).
+///
+/// Returns a [Future] that completes with a [ThumbHashImage] containing
+/// width, height, and RGBA pixel data.
+///
+/// Example:
+/// ```dart
+/// final hash = base64.decode('3OcRJYB4d3h/iIeHeEh3eIhw+j3A');
+/// final image = await thumbHashToRGBAAsync(hash);
+/// print('Size: ${image.width}x${image.height}');
+/// ```
+///
+/// Throws [ArgumentError] if the hash is too short or malformed.
+Future<ThumbHashImage> thumbHashToRGBAAsync(Uint8List hash) {
+  return Isolate.run(() => thumbHashToRGBA(hash));
+}
+
+/// Encodes an RGBA image to a ThumbHash asynchronously.
+///
+/// This runs [rgbaToThumbHash] in a separate isolate to avoid blocking
+/// the main thread, which is useful for UI applications.
+///
+/// RGB should not be premultiplied by A (straight alpha).
+///
+/// [w] is the width of the input image. Must be <= 100px.
+/// [h] is the height of the input image. Must be <= 100px.
+/// [rgba] is the pixels in the input image, row-by-row.
+/// Must have w*h*4 elements (4 bytes per pixel: R, G, B, A).
+///
+/// Returns a [Future] that completes with the ThumbHash as a [Uint8List]
+/// (typically 25-35 bytes).
+///
+/// Example:
+/// ```dart
+/// // Encode a 100x75 image asynchronously
+/// final hash = await rgbaToThumbHashAsync(100, 75, pixelData);
+/// final base64Hash = base64.encode(hash);
+/// ```
+///
+/// Throws [ArgumentError] if dimensions exceed 100x100 or rgba length is wrong.
+Future<Uint8List> rgbaToThumbHashAsync(int w, int h, Uint8List rgba) {
+  return Isolate.run(() => rgbaToThumbHash(w, h, rgba));
 }
 
 // ============================================================================

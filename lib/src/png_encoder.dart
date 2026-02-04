@@ -1,3 +1,4 @@
+import 'dart:isolate';
 import 'dart:typed_data';
 
 import 'models.dart';
@@ -262,6 +263,26 @@ Uint8List thumbHashImageToPng(ThumbHashImage image) {
   out[pos++] = 0x82;
 
   return out;
+}
+
+/// Encodes a ThumbHash image to PNG format asynchronously.
+///
+/// This runs [thumbHashImageToPng] in a separate isolate to avoid blocking
+/// the main thread, which is useful for UI applications.
+///
+/// [image] is a [ThumbHashImage] with RGBA pixel data.
+///
+/// Returns a [Future] that completes with a [Uint8List] containing
+/// the PNG file data.
+///
+/// Example:
+/// ```dart
+/// final image = thumbHashToRGBA(hash);
+/// final pngBytes = await thumbHashImageToPngAsync(image);
+/// // Use pngBytes with Image.memory() or save to file
+/// ```
+Future<Uint8List> thumbHashImageToPngAsync(ThumbHashImage image) {
+  return Isolate.run(() => thumbHashImageToPng(image));
 }
 
 /// Computes CRC-32 using a 256-entry table for speed.

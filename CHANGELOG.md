@@ -5,6 +5,22 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.0] - 2026-02-04
+
+### Added
+
+- **Async methods** - All CPU-intensive operations now have async versions that run in separate isolates, keeping the UI responsive:
+  - `thumbHashToRGBAAsync()` - Decode ThumbHash asynchronously
+  - `rgbaToThumbHashAsync()` - Encode RGBA to ThumbHash asynchronously
+  - `thumbHashImageToPngAsync()` - Encode PNG asynchronously
+  - `ThumbHash.toRGBAAsync()` - Decode with caching, off main thread
+  - `ThumbHash.toPngBytesAsync()` - Get PNG bytes, off main thread
+  - `ThumbHash.toImageAsync()` - Get ImageProvider, off main thread
+
+### Changed
+
+- Minimum Dart SDK version updated to 2.19.0 (required for `Isolate.run()`)
+
 ## [1.1.1] - 2026-02-03
 
 ### Fixed

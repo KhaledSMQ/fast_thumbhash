@@ -11,6 +11,7 @@ ThumbHash is a very compact representation of an image placeholder. It encodes t
 
 - **Ultra-fast decoding** - 7x faster than naive implementation using separable 2D IDCT
 - **Fast PNG encoding** - 1.6x faster with batched Adler-32 and 256-entry CRC table
+- **Async support** - All CPU-intensive operations have async versions using isolates
 - **Full alpha support** - Images with transparency work correctly
 - **Natural loading transitions** - Smooth fade, blur-to-sharp, and scale effects
 - **Complete API** - All ThumbHash operations supported
@@ -23,7 +24,7 @@ Add to your `pubspec.yaml`:
 
 ```yaml
 dependencies:
-  fast_thumbhash: ^1.1.0
+  fast_thumbhash: ^1.2.0
 ```
 
 ## Quick Start
@@ -54,6 +55,22 @@ AspectRatio(
   aspectRatio: thumbHash.toAspectRatio(),
   child: Image(image: thumbHash.toImage(), fit: BoxFit.cover),
 )
+```
+
+### Async Usage (Recommended for UI)
+
+For better UI performance, use async methods to run decoding off the main thread:
+
+```dart
+// Async methods run in separate isolates - no UI jank!
+final imageProvider = await thumbHash.toImageAsync();
+final pngBytes = await thumbHash.toPngBytesAsync();
+final rgbaImage = await thumbHash.toRGBAAsync();
+
+// Core async functions for lower-level access
+final decoded = await thumbHashToRGBAAsync(hashBytes);
+final encoded = await rgbaToThumbHashAsync(width, height, rgba);
+final png = await thumbHashImageToPngAsync(image);
 ```
 
 ### Natural Image Loading
@@ -165,13 +182,18 @@ ThumbHash.fromBase64(String encoded);
 ThumbHash.fromBytes(Uint8List bytes);
 ThumbHash.fromIntList(List<int> list);
 
-// Methods
+// Sync methods
 ImageProvider toImage();         // For Flutter Image widget
 Color toAverageColor();          // Get average color as Flutter Color
 ThumbHashColor toAverageRGBA();  // Get average color (0.0-1.0)
 double toAspectRatio();          // Get width/height ratio
 ThumbHashImage toRGBA();         // Get raw RGBA pixel data
 Uint8List toPngBytes();          // Get PNG file bytes
+
+// Async methods (run in separate isolate - recommended for UI)
+Future<ImageProvider> toImageAsync();    // For Flutter Image widget
+Future<ThumbHashImage> toRGBAAsync();    // Get raw RGBA pixel data
+Future<Uint8List> toPngBytesAsync();     // Get PNG file bytes
 
 // Properties
 bool hasAlpha;                   // Whether image has transparency
@@ -186,18 +208,21 @@ For lower-level access or pure Dart usage:
 ```dart
 // Decode ThumbHash to RGBA image
 ThumbHashImage thumbHashToRGBA(Uint8List hash);
+Future<ThumbHashImage> thumbHashToRGBAAsync(Uint8List hash);  // Async version
 
 // Encode RGBA image to ThumbHash (max 100x100 pixels)
 Uint8List rgbaToThumbHash(int width, int height, Uint8List rgba);
+Future<Uint8List> rgbaToThumbHashAsync(int w, int h, Uint8List rgba);  // Async version
 
-// Extract average color
+// Extract average color (very fast, no async needed)
 ThumbHashColor thumbHashToAverageRGBA(Uint8List hash);
 
-// Get approximate aspect ratio
+// Get approximate aspect ratio (very fast, no async needed)
 double thumbHashToApproximateAspectRatio(Uint8List hash);
 
 // Encode image to PNG
 Uint8List thumbHashImageToPng(ThumbHashImage image);
+Future<Uint8List> thumbHashImageToPngAsync(ThumbHashImage image);  // Async version
 ```
 
 ### Data Models
